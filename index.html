@@ -26,6 +26,17 @@
 
 <div class="container">
     <h1>📚 WordStock </h1>
+    <div class="card">
+        <h2>🆕 自分で単語を追加</h2>
+        <input type="text" id="word" placeholder="英単語">
+        <input type="text" id="meaning" placeholder="意味">
+        <input type="text" id="type" placeholder="品詞 (例: 動詞, 名詞)">
+        <input type="text" id="pronunciation" placeholder="発音記号/カタカナ">
+        <textarea id="sentence" rows="2" placeholder="例文"></textarea>
+        <textarea id="advice" rows="2" placeholder="解説・メモ"></textarea>
+        
+        <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">スマホに保存</button>
+    </div>
     <button class="btn btn-sync" onclick="syncFromSheet()">🔄 最新単語を取り込む</button>
     <div class="card" style="text-align:center;">
         <h2 id="review-count">今日の復習: 0 語</h2>
@@ -138,4 +149,5 @@
 </body>
 
 </html>
+
 
