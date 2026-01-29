@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English Vocab Sync - 屋根裏英語</title>
+    <title>English Vocab Sync - WordStock</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --bg: #f0f2f5; --text: #333; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); line-height: 1.5; }
@@ -25,11 +25,11 @@
 <body>
 
 <div class="container">
-    <h1>📚 屋根裏英語 Vocab Sync</h1>
-    <button class="btn btn-sync" onclick="syncFromSheet()">🔄 先生の最新単語を取り込む</button>
+    <h1>📚 WordStock Vocab Sync</h1>
+    <button class="btn btn-sync" onclick="syncFromSheet()">🔄 最新単語を取り込む</button>
     <div class="card" style="text-align:center;">
         <h2 id="review-count">今日の復習: 0 語</h2>
-        <button class="btn btn-main" onclick="startReview()">復習トレーニング開始</button>
+        <button class="btn btn-main" onclick="startReview()">復習開始</button>
     </div>
 </div>
 
@@ -136,4 +136,5 @@
     function closeQuiz() { document.getElementById('quiz-area').style.display = "none"; updateDisplay(); }
 </script>
 </body>
+
 </html>
