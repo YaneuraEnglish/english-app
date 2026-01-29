@@ -22,129 +22,62 @@
         .answer-box { display: none; background: #2d2d2d; padding: 20px; border-radius: 12px; text-align: left; border-left: 5px solid var(--primary); }
         .highlight { color: #ffd700; font-weight: bold; }
         .choice-group { display: flex; gap: 15px; margin-top: 30px; display: none; }
-        .progress-indicator { 
-            background: rgba(255,255,255,0.1); 
-            padding: 10px 15px; 
-            border-radius: 20px; 
-            font-size: 0.9rem; 
-            margin-bottom: 15px;
-            color: #aaa;
-        }
-        /* 入力フォーム全体のスタイル */
-.add-card { 
-    background: #ffffff; 
-    border-radius: 15px; 
-    overflow: hidden; 
-    margin-bottom: 20px; 
-    border: 1px solid #e0e4e8;
-}
-
-/* タップして開閉するヘッダー */
-.add-header {
-    background: #f8f9fa;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    font-weight: bold;
-    color: #555;
-}
-
-/* 入力エリアの中身 */
-.add-body {
-    padding: 20px;
-    display: none; /* 最初は隠す */
-    border-top: 1px solid #eee;
-}
-
-/* 入力欄のデザイン向上 */
-.input-group { margin-bottom: 15px; }
-.input-group label { 
-    display: block; 
-    font-size: 0.85rem; 
-    color: #888; 
-    margin-bottom: 5px; 
-    margin-left: 5px;
-}
-
-input[type="text"], textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #dee2e6;
-    border-radius: 10px;
-    background: #fcfcfc;
-    font-size: 16px;
-    transition: 0.3s;
-}
-
-input[type="text"]:focus, textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: #fff;
-    box-shadow: 0 0 0 4px rgba(0,123,255,0.1);
-}
-
-input[type="file"] {
-    display: none;
-}
+        .progress-indicator { background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 15px; color: #aaa; }
+        .add-card { background: #ffffff; border-radius: 15px; overflow: hidden; margin-bottom: 20px; border: 1px solid #e0e4e8; }
+        .add-header { background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; color: #555; }
+        .add-body { padding: 20px; display: none; border-top: 1px solid #eee; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 5px; margin-left: 5px; }
+        input[type="text"], textarea { width: 100%; padding: 12px; border: 1px solid #dee2e6; border-radius: 10px; background: #fcfcfc; font-size: 16px; transition: 0.3s; }
+        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(0,123,255,0.1); }
+        input[type="file"] { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📚 WordStock </h1>
-   <div class="add-card">
-    <div class="add-header" onclick="toggleAddForm()">
-        <span>自分で単語を追加</span>
-        <span id="add-icon">＋</span>
-    </div>
-    
-    <div id="add-body" class="add-body">
-        <div class="input-group">
-            <label>英単語</label>
-            <input type="text" id="word" placeholder="例: apple">
-        </div>
-        <div class="input-group">
-            <label>意味</label>
-            <input type="text" id="meaning" placeholder="例: りんご">
-        </div>
-        
-        <div style="display: flex; gap: 10px;">
-            <div class="input-group" style="flex: 1;">
-                <label>品詞</label>
-                <input type="text" id="type" placeholder="名詞">
-            </div>
-            <div class="input-group" style="flex: 1;">
-                <label>発音</label>
-                <input type="text" id="pronunciation" placeholder="æpl">
-            </div>
-        </div>
+    <h1>📚 WordStock</h1>
 
-        <div class="input-group">
-            <label>例文</label>
-            <textarea id="sentence" rows="2" placeholder="I like apples."></textarea>
-        </div>
-        <div class="input-group">
-            <label>メモ・解説</label>
-            <textarea id="advice" rows="2" placeholder="語源や覚え方のコツ"></textarea>
-        </div>
+    <div class="card" style="font-size: 0.85rem; background: #fff3cd; border: none; padding: 10px 15px; border-radius: 10px;">
+        💡 先生の最新単語を「単語を取り込む」で同期して学習を開始しましょう。
+    </div>
 
-        <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">
-            スマホに保存する
-        </button>
-    </div>
-</div>
-    </div>
-    <button class="btn btn-sync" onclick="syncFromSheet()">単語を取り込む</button>
-    <button class="btn btn-backup" onclick="exportData()">📥 データをバックアップ</button>
-    <button class="btn btn-backup" onclick="document.getElementById('importFile').click()">📤 バックアップから復元</button>
-    <input type="file" id="importFile" accept=".json" onchange="importData(event)">
-    
     <div class="card" style="text-align:center;">
+        <div style="margin-bottom: 15px; text-align: left;">
+            <label style="font-size: 0.8rem; color: #888; font-weight: bold;">コース・難易度を選択：</label>
+            <select id="level-filter" onchange="updateDisplay()" style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--primary); font-size: 1rem; background: white;">
+                <option value="ALL">すべての単語</option>
+            </select>
+        </div>
         <h2 id="review-count">今日の復習: 0 語</h2>
         <button class="btn btn-main" onclick="startReview()">復習開始</button>
     </div>
+
+    <button class="btn btn-sync" onclick="syncFromSheet()">🔄 最新の単語を取り込む</button>
+
+    <div class="add-card">
+        <div class="add-header" onclick="toggleAddForm()">
+            <span>自分で単語を追加</span>
+            <span id="add-icon">＋</span>
+        </div>
+        <div id="add-body" class="add-body">
+            <div class="input-group"><label>英単語</label><input type="text" id="word" placeholder="例: apple"></div>
+            <div class="input-group"><label>意味</label><input type="text" id="meaning" placeholder="例: りんご"></div>
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;"><label>品詞</label><input type="text" id="type" placeholder="名詞"></div>
+                <div class="input-group" style="flex: 1;"><label>発音</label><input type="text" id="pronunciation" placeholder="æpl"></div>
+            </div>
+            <div class="input-group"><label>例文</label><textarea id="sentence" rows="2" placeholder="I like apples."></textarea></div>
+            <div class="input-group"><label>メモ・解説</label><textarea id="advice" rows="2" placeholder="語源や覚え方のコツ"></textarea></div>
+            <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">スマホに保存する</button>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-backup" onclick="exportData()" style="flex:1; font-size: 0.8rem;">📥 データを保存</button>
+        <button class="btn btn-backup" onclick="document.getElementById('importFile').click()" style="flex:1; font-size: 0.8rem;">📤 データを復元</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" onchange="importData(event)">
 </div>
 
 <div id="quiz-area">
@@ -168,159 +101,88 @@ input[type="file"] {
 </div>
 
 <script>
-    function saveWord() {
-        const word = document.getElementById('word').value;
-        const meaning = document.getElementById('meaning').value;
-        
-        if (!word || !meaning) return alert("単語と意味は必須です");
-
-        const data = {
-            level: "自習", // 手動追加分とわかるように
-            type: document.getElementById('type').value,
-            word: word.trim(),
-            pronunciation: document.getElementById('pronunciation').value,
-            meaning: meaning,
-            sentence: document.getElementById('sentence').value,
-            advice: document.getElementById('advice').value,
-            nextReview: new Date().toISOString().split('T')[0],
-            interval: 0
-        };
-
-        myVocab.push(data);
-        
-        try {
-            localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-            // 入力欄をクリア
-            document.querySelectorAll('input, textarea').forEach(el => el.value = "");
-            alert("単語を保存しました！");
-        } catch(e) {
-            alert("⚠️ 保存失敗：データ容量が上限に達しました");
-        }
-        
-        updateDisplay();
-    }
-    
     let myVocab = JSON.parse(localStorage.getItem('my_vocab_data')) || [];
     let quizList = [];
     let currentIdx = 0;
 
     function updateDisplay() {
         const today = new Date().toISOString().split('T')[0];
-        const due = myVocab.filter(v => !v.nextReview || v.nextReview <= today);
+        const filter = document.getElementById('level-filter').value;
+
+        // レベル選択肢の動的更新
+        const levels = [...new Set(myVocab.map(v => v.level))].filter(Boolean);
+        const select = document.getElementById('level-filter');
+        const currentSelection = select.value;
+        select.innerHTML = '<option value="ALL">すべての単語</option>';
+        levels.forEach(lvl => {
+            const opt = document.createElement('option');
+            opt.value = lvl;
+            opt.innerText = lvl;
+            select.appendChild(opt);
+        });
+        select.value = currentSelection;
+
+        // 今日の復習数
+        const due = myVocab.filter(v => {
+            const isDue = !v.nextReview || v.nextReview <= today;
+            const isMatch = (filter === "ALL" || v.level === filter);
+            return isDue && isMatch;
+        });
         document.getElementById('review-count').innerText = `今日の復習: ${due.length} 語`;
     }
-    updateDisplay();
 
     async function syncFromSheet() {
         const sheetId = "18XxJwzl4sF3_kHJp8qk-QUUfvsqMM3AyJNKdWmyUFUE";
         const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
-        
         try {
             const res = await fetch(sheetUrl);
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            
             const csv = await res.text();
-            const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1); 
+            const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1);
             let count = 0;
-            
             rows.forEach(line => {
                 if (!line.trim()) return;
-                
                 const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 const clean = (s) => s ? s.replace(/^"|"$/g, '').trim() : "";
-                
                 if (cols.length >= 3) {
                     const rawWordData = clean(cols[2]);
                     const wordParts = rawWordData.split(/\r?\n/);
-                    
                     const word = wordParts[0].trim();
                     const pron = wordParts.slice(1).join(' ').trim();
-
                     if (word && !myVocab.some(v => v.word.toLowerCase() === word.toLowerCase())) {
                         myVocab.push({
-                            level: clean(cols[0]),
-                            type: clean(cols[1]),
-                            word: word,
-                            pronunciation: pron || undefined,
-                            meaning: clean(cols[3]),
-                            sentence: clean(cols[4]),
-                            advice: clean(cols[5]),
-                            nextReview: new Date().toISOString().split('T')[0],
-                            interval: 0
+                            level: clean(cols[0]), type: clean(cols[1]), word: word,
+                            pronunciation: pron || undefined, meaning: clean(cols[3]),
+                            sentence: clean(cols[4]), advice: clean(cols[5]),
+                            nextReview: new Date().toISOString().split('T')[0], interval: 0
                         });
                         count++;
                     }
                 }
             });
-            
             localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-            alert(`✅ ${count}件の新しい単語を追加しました！`);
+            alert(`✅ ${count}件の単語を追加しました！`);
             updateDisplay();
-            
-        } catch (e) {
-            console.error('同期エラー:', e);
-            alert("⚠️ 同期に失敗しました。スプレッドシートが『ウェブに公開』されているか確認してください。");
-        }
-    }
-
-    // 【新機能1】データバックアップ
-    function exportData() {
-        const data = JSON.stringify(myVocab, null, 2);
-        const blob = new Blob([data], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `wordstock_backup_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        alert("📥 バックアップファイルをダウンロードしました");
-    }
-
-    // 【新機能2】データ復元
-    function importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (!Array.isArray(imported)) throw new Error("Invalid format");
-                
-                const confirmed = confirm(`${imported.length}件のデータを復元しますか？\n※既存データは上書きされます`);
-                if (confirmed) {
-                    myVocab = imported;
-                    localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-                    alert("✅ データを復元しました");
-                    updateDisplay();
-                }
-            } catch(e) {
-                alert("⚠️ ファイルの読み込みに失敗しました");
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = ''; // リセット
+        } catch (e) { alert("同期に失敗しました。"); }
     }
 
     function startReview() {
         const today = new Date().toISOString().split('T')[0];
-        quizList = myVocab.filter(v => !v.nextReview || v.nextReview <= today);
-        if (quizList.length === 0) return alert("復習なし！");
-        
-        // 【新機能3】ランダム出題
+        const filter = document.getElementById('level-filter').value;
+        quizList = myVocab.filter(v => {
+            const isDue = !v.nextReview || v.nextReview <= today;
+            const isMatch = (filter === "ALL" || v.level === filter);
+            return isDue && isMatch;
+        });
+        if (quizList.length === 0) return alert("復習すべき単語はありません！");
         quizList = quizList.sort(() => Math.random() - 0.5);
-        
         currentIdx = 0;
         document.getElementById('quiz-area').style.display = "block";
         showQuestion();
     }
-    
+
     function showQuestion() {
         const q = quizList[currentIdx];
-        
-        // 【新機能4】進捗表示
         document.getElementById('progress-indicator').innerText = `問題 ${currentIdx + 1}/${quizList.length}`;
-        
         document.getElementById('q-word').innerText = q.word;
         document.getElementById('q-type-label').innerText = `[${q.level}] ${q.type}`;
         document.getElementById('q-pron').innerText = q.pronunciation ? `[ ${q.pronunciation} ]` : "";
@@ -331,13 +193,13 @@ input[type="file"] {
         document.getElementById('choice-group').style.display = "none";
         document.getElementById('show-ans-btn').style.display = "block";
     }
-    
+
     function showAnswer() {
         document.getElementById('answer-box').style.display = "block";
         document.getElementById('choice-group').style.display = "flex";
         document.getElementById('show-ans-btn').style.display = "none";
     }
-    
+
     function submitResult(isCorrect) {
         const target = myVocab.find(v => v.word === quizList[currentIdx].word);
         if(isCorrect) { target.interval = (target.interval === 0) ? 1 : target.interval * 2; }
@@ -348,23 +210,52 @@ input[type="file"] {
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         currentIdx++;
         if(currentIdx < quizList.length) showQuestion();
-        else { alert("🎉 完了！お疲れ様でした"); closeQuiz(); }
+        else { alert("🎉 完了！"); closeQuiz(); }
     }
-    
+
+    function saveWord() {
+        const word = document.getElementById('word').value;
+        const meaning = document.getElementById('meaning').value;
+        if (!word || !meaning) return alert("必須項目を埋めてください");
+        myVocab.push({
+            level: "自習", type: document.getElementById('type').value, word: word.trim(),
+            pronunciation: document.getElementById('pronunciation').value, meaning: meaning,
+            sentence: document.getElementById('sentence').value, advice: document.getElementById('advice').value,
+            nextReview: new Date().toISOString().split('T')[0], interval: 0
+        });
+        localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
+        alert("保存しました！");
+        updateDisplay();
+    }
+
+    function exportData() {
+        const blob = new Blob([JSON.stringify(myVocab, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `wordstock_backup.json`;
+        a.click();
+    }
+
+    function importData(event) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            myVocab = JSON.parse(e.target.result);
+            localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
+            alert("復元しました");
+            updateDisplay();
+        };
+        reader.readAsText(event.target.files[0]);
+    }
+
     function closeQuiz() { document.getElementById('quiz-area').style.display = "none"; updateDisplay(); }
-    
     function toggleAddForm() {
         const body = document.getElementById('add-body');
-        const icon = document.getElementById('add-icon');
-        if (body.style.display === "block") {
-            body.style.display = "none";
-            icon.innerText = "＋";
-        } else {
-            body.style.display = "block";
-            icon.innerText = "ー";
-        }
+        body.style.display = (body.style.display === "block") ? "none" : "block";
+        document.getElementById('add-icon').innerText = (body.style.display === "block") ? "ー" : "＋";
     }
+
+    // 初期実行
+    updateDisplay();
 </script>
 </body>
 </html>
-
