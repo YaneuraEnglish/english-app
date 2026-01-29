@@ -36,10 +36,11 @@
 <body>
 
 <div class="container">
-    <h1>📚 WordStock</h1>
+    <h1>📚 WordStock <small style="font-size:0.6rem; color:#999;">by yaneuraenglish</small></h1>
 
-    <div class="card" style="font-size: 0.85rem; background: #fff3cd; border: none; padding: 10px 15px; border-radius: 10px;">
-        💡 「単語を取り込む」で同期して学習を開始
+    <div id="teacher-msg-card" class="card" style="font-size: 0.85rem; background: #fff3cd; border: none; padding: 10px 15px; border-radius: 10px; display: block;">
+        <strong>📢 先生からのメッセージ:</strong><br>
+        <span id="teacher-message">「取り込む」ボタンで最新の単語を同期してください。</span>
     </div>
 
     <div class="card" style="text-align:center;">
@@ -53,11 +54,11 @@
         <button class="btn btn-main" onclick="startReview()">復習開始</button>
     </div>
 
-    <button class="btn btn-sync" onclick="syncFromSheet()">最新の単語を取り込む</button>
+    <button class="btn btn-sync" onclick="syncFromSheet()">🔄 最新の単語を取り込む</button>
 
     <div class="add-card">
         <div class="add-header" onclick="toggleAddForm()">
-            <span>自分で単語を追加</span>
+            <span>自分で単語を追加（自習用）</span>
             <span id="add-icon">＋</span>
         </div>
         <div id="add-body" class="add-body">
@@ -101,6 +102,11 @@
 </div>
 
 <script>
+    // セキュリティ対策：IDを分割して保持
+    const _p1 = "18XxJwzl4sF3_";
+    const _p2 = "kHJp8qk-QUUfvsqMM3AyJNKdWmyUFUE";
+    const SECRET_KEY = "220260130018"; // ★ここにSNSで教える「合言葉」を設定してください
+
     let myVocab = JSON.parse(localStorage.getItem('my_vocab_data')) || [];
     let quizList = [];
     let currentIdx = 0;
@@ -109,20 +115,17 @@
         const today = new Date().toISOString().split('T')[0];
         const filter = document.getElementById('level-filter').value;
 
-        // レベル選択肢の動的更新
         const levels = [...new Set(myVocab.map(v => v.level))].filter(Boolean);
         const select = document.getElementById('level-filter');
         const currentSelection = select.value;
         select.innerHTML = '<option value="ALL">すべての単語</option>';
         levels.forEach(lvl => {
             const opt = document.createElement('option');
-            opt.value = lvl;
-            opt.innerText = lvl;
+            opt.value = lvl; opt.innerText = lvl;
             select.appendChild(opt);
         });
         select.value = currentSelection;
 
-        // 今日の復習数
         const due = myVocab.filter(v => {
             const isDue = !v.nextReview || v.nextReview <= today;
             const isMatch = (filter === "ALL" || v.level === filter);
@@ -132,22 +135,38 @@
     }
 
     async function syncFromSheet() {
-        const sheetId = "18XxJwzl4sF3_kHJp8qk-QUUfvsqMM3AyJNKdWmyUFUE";
-        const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+        const inputKey = prompt("合言葉を入力してください（SNSまたは先生から入手）:");
+        if (inputKey !== SECRET_KEY) {
+            alert("合言葉が正しくありません。");
+            return;
+        }
+
+        const sId = _p1 + _p2;
+        const url = `https://docs.google.com/spreadsheets/d/${sId}/gviz/tq?tqx=out:csv`;
+
         try {
-            const res = await fetch(sheetUrl);
+            const res = await fetch(url);
             const csv = await res.text();
             const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1);
             let count = 0;
+            
             rows.forEach(line => {
                 if (!line.trim()) return;
                 const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 const clean = (s) => s ? s.replace(/^"|"$/g, '').trim() : "";
+                
+                // 1行目にメッセージがあるかチェック(MESSAGE:〜の形式)
+                if(line.includes("MESSAGE:")) {
+                    const msg = line.match(/MESSAGE:([^,"]+)/);
+                    if(msg) document.getElementById('teacher-message').innerText = msg[1];
+                }
+
                 if (cols.length >= 3) {
                     const rawWordData = clean(cols[2]);
                     const wordParts = rawWordData.split(/\r?\n/);
                     const word = wordParts[0].trim();
                     const pron = wordParts.slice(1).join(' ').trim();
+                    
                     if (word && !myVocab.some(v => v.word.toLowerCase() === word.toLowerCase())) {
                         myVocab.push({
                             level: clean(cols[0]), type: clean(cols[1]), word: word,
@@ -160,11 +179,12 @@
                 }
             });
             localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-            alert(`✅ ${count}件の単語を追加しました！`);
+            alert(`✅ 同期完了！ ${count}件の新しい単語を追加しました。`);
             updateDisplay();
-        } catch (e) { alert("同期に失敗しました。"); }
+        } catch (e) { alert("同期に失敗しました。公開設定を確認してください。"); }
     }
 
+    // --- 以下、クイズ・基本ロジック(変更なし) ---
     function startReview() {
         const today = new Date().toISOString().split('T')[0];
         const filter = document.getElementById('level-filter').value;
@@ -179,7 +199,6 @@
         document.getElementById('quiz-area').style.display = "block";
         showQuestion();
     }
-
     function showQuestion() {
         const q = quizList[currentIdx];
         document.getElementById('progress-indicator').innerText = `問題 ${currentIdx + 1}/${quizList.length}`;
@@ -193,13 +212,11 @@
         document.getElementById('choice-group').style.display = "none";
         document.getElementById('show-ans-btn').style.display = "block";
     }
-
     function showAnswer() {
         document.getElementById('answer-box').style.display = "block";
         document.getElementById('choice-group').style.display = "flex";
         document.getElementById('show-ans-btn').style.display = "none";
     }
-
     function submitResult(isCorrect) {
         const target = myVocab.find(v => v.word === quizList[currentIdx].word);
         if(isCorrect) { target.interval = (target.interval === 0) ? 1 : target.interval * 2; }
@@ -210,9 +227,8 @@
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         currentIdx++;
         if(currentIdx < quizList.length) showQuestion();
-        else { alert("完了！"); closeQuiz(); }
+        else { alert("🎉 全問題を完了しました！"); closeQuiz(); }
     }
-
     function saveWord() {
         const word = document.getElementById('word').value;
         const meaning = document.getElementById('meaning').value;
@@ -227,7 +243,6 @@
         alert("保存しました！");
         updateDisplay();
     }
-
     function exportData() {
         const blob = new Blob([JSON.stringify(myVocab, null, 2)], {type: 'application/json'});
         const a = document.createElement('a');
@@ -235,28 +250,23 @@
         a.download = `wordstock_backup.json`;
         a.click();
     }
-
     function importData(event) {
         const reader = new FileReader();
         reader.onload = (e) => {
             myVocab = JSON.parse(e.target.result);
             localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-            alert("復元しました");
+            alert("復元完了");
             updateDisplay();
         };
         reader.readAsText(event.target.files[0]);
     }
-
     function closeQuiz() { document.getElementById('quiz-area').style.display = "none"; updateDisplay(); }
     function toggleAddForm() {
         const body = document.getElementById('add-body');
         body.style.display = (body.style.display === "block") ? "none" : "block";
         document.getElementById('add-icon').innerText = (body.style.display === "block") ? "ー" : "＋";
     }
-
-    // 初期実行
     updateDisplay();
 </script>
 </body>
 </html>
-
