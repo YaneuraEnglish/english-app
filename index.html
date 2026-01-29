@@ -20,22 +20,107 @@
         .answer-box { display: none; background: #2d2d2d; padding: 20px; border-radius: 12px; text-align: left; border-left: 5px solid var(--primary); }
         .highlight { color: #ffd700; font-weight: bold; }
         .choice-group { display: flex; gap: 15px; margin-top: 30px; display: none; }
+        /* 入力フォーム全体のスタイル */
+.add-card { 
+    background: #ffffff; 
+    border-radius: 15px; 
+    overflow: hidden; 
+    margin-bottom: 20px; 
+    border: 1px solid #e0e4e8;
+}
+
+/* タップして開閉するヘッダー */
+.add-header {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: #555;
+}
+
+/* 入力エリアの中身 */
+.add-body {
+    padding: 20px;
+    display: none; /* 最初は隠す */
+    border-top: 1px solid #eee;
+}
+
+/* 入力欄のデザイン向上 */
+.input-group { margin-bottom: 15px; }
+.input-group label { 
+    display: block; 
+    font-size: 0.85rem; 
+    color: #888; 
+    margin-bottom: 5px; 
+    margin-left: 5px;
+}
+
+input[type="text"], textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: #fcfcfc;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+input[type="text"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(0,123,255,0.1);
+}
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>📚 WordStock </h1>
-    <div class="card">
-        <h2>自分で単語を追加</h2>
-        <input type="text" id="word" placeholder="英単語">
-        <input type="text" id="meaning" placeholder="意味">
-        <input type="text" id="type" placeholder="品詞 (例: 動詞, 名詞)">
-        <input type="text" id="pronunciation" placeholder="発音記号/カタカナ">
-        <textarea id="sentence" rows="2" placeholder="例文"></textarea>
-        <textarea id="advice" rows="2" placeholder="解説"></textarea>
+   <div class="add-card">
+    <div class="add-header" onclick="toggleAddForm()">
+        <span>🆕 自分で単語を追加</span>
+        <span id="add-icon">＋</span>
+    </div>
+    
+    <div id="add-body" class="add-body">
+        <div class="input-group">
+            <label>英単語</label>
+            <input type="text" id="word" placeholder="例: apple">
+        </div>
+        <div class="input-group">
+            <label>意味</label>
+            <input type="text" id="meaning" placeholder="例: りんご">
+        </div>
         
-        <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">スマホに保存</button>
+        <div style="display: flex; gap: 10px;">
+            <div class="input-group" style="flex: 1;">
+                <label>品詞</label>
+                <input type="text" id="type" placeholder="名詞">
+            </div>
+            <div class="input-group" style="flex: 1;">
+                <label>発音</label>
+                <input type="text" id="pronunciation" placeholder="æpl">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>例文</label>
+            <textarea id="sentence" rows="2" placeholder="I like apples."></textarea>
+        </div>
+        <div class="input-group">
+            <label>メモ・解説</label>
+            <textarea id="advice" rows="2" placeholder="語源や覚え方のコツ"></textarea>
+        </div>
+
+        <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">
+            スマホに保存する
+        </button>
+    </div>
+</div>
     </div>
     <button class="btn btn-sync" onclick="syncFromSheet()">🔄 最新単語を取り込む</button>
     <div class="card" style="text-align:center;">
@@ -172,10 +257,22 @@
         else { alert("完了！"); closeQuiz(); }
     }
     function closeQuiz() { document.getElementById('quiz-area').style.display = "none"; updateDisplay(); }
+    function toggleAddForm() {
+    const body = document.getElementById('add-body');
+    const icon = document.getElementById('add-icon');
+    if (body.style.display === "block") {
+        body.style.display = "none";
+        icon.innerText = "＋";
+    } else {
+        body.style.display = "block";
+        icon.innerText = "ー";
+    }
+}
 </script>
 </body>
 
 </html>
+
 
 
 
