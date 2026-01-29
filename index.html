@@ -39,7 +39,7 @@
     <h1>📚 WordStock</h1>
 
     <div class="card" style="font-size: 0.85rem; background: #fff3cd; border: none; padding: 10px 15px; border-radius: 10px;">
-        💡 先生の最新単語を「単語を取り込む」で同期して学習を開始しましょう。
+        💡 「単語を取り込む」で同期して学習を開始
     </div>
 
     <div class="card" style="text-align:center;">
@@ -53,7 +53,7 @@
         <button class="btn btn-main" onclick="startReview()">復習開始</button>
     </div>
 
-    <button class="btn btn-sync" onclick="syncFromSheet()">🔄 最新の単語を取り込む</button>
+    <button class="btn btn-sync" onclick="syncFromSheet()">最新の単語を取り込む</button>
 
     <div class="add-card">
         <div class="add-header" onclick="toggleAddForm()">
@@ -210,7 +210,7 @@
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         currentIdx++;
         if(currentIdx < quizList.length) showQuestion();
-        else { alert("🎉 完了！"); closeQuiz(); }
+        else { alert("完了！"); closeQuiz(); }
     }
 
     function saveWord() {
@@ -259,3 +259,4 @@
 </script>
 </body>
 </html>
+
