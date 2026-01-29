@@ -64,6 +64,33 @@
 </div>
 
 <script>
+    function saveWord() {
+        const word = document.getElementById('word').value;
+        const meaning = document.getElementById('meaning').value;
+        
+        if (!word || !meaning) return alert("単語と意味は必須です");
+
+        const data = {
+            level: "自習", // 手動追加分とわかるように
+            type: document.getElementById('type').value,
+            word: word.trim(),
+            pronunciation: document.getElementById('pronunciation').value,
+            meaning: meaning,
+            sentence: document.getElementById('sentence').value,
+            advice: document.getElementById('advice').value,
+            nextReview: new Date().toISOString().split('T')[0],
+            interval: 0
+        };
+
+        myVocab.push(data);
+        localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
+        
+        // 入力欄をクリア
+        document.querySelectorAll('input, textarea').forEach(el => el.value = "");
+        
+        alert("単語を保存しました！");
+        updateDisplay();
+    }
     let myVocab = JSON.parse(localStorage.getItem('my_vocab_data')) || [];
     let quizList = [];
     let currentIdx = 0;
@@ -149,5 +176,6 @@
 </body>
 
 </html>
+
 
 
