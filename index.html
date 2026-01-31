@@ -10,29 +10,37 @@
         .container { max-width: 500px; margin: 0 auto; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 20px; }
         h1 { font-size: 1.2rem; text-align: center; color: #555; margin-bottom: 20px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; position: relative; }
         .btn-sync { background: #6f42c1; color: white; margin-bottom: 15px; box-shadow: 0 4px 0 #5634a1; }
         .btn-sync:active { transform: translateY(2px); box-shadow: none; }
         .btn-backup { background: #6c757d; color: white; margin-bottom: 15px; box-shadow: 0 4px 0 #5a6268; }
         .btn-backup:active { transform: translateY(2px); box-shadow: none; }
         .btn-main { background: var(--primary); color: white; }
+        
+        /* クイズエリアとプログレスバー */
         #quiz-area { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; color: white; z-index: 1000; padding: 25px; box-sizing: border-box; overflow-y: auto; }
-        .quiz-card { text-align: center; margin-top: 20px; }
+        #progress-bar-container { width: 100%; height: 6px; background: #333; position: fixed; top: 0; left: 0; z-index: 1001; }
+        #progress-bar { width: 0%; height: 100%; background: var(--success); transition: 0.3s; }
+        
+        .quiz-card { text-align: center; margin-top: 30px; }
         .q-word { font-size: 2.8rem; font-weight: bold; margin: 10px 0; color: #fff; }
-        .answer-box { display: none; background: #2d2d2d; padding: 20px; border-radius: 12px; text-align: left; border-left: 5px solid var(--primary); }
+        .answer-box { display: none; background: #2d2d2d; padding: 20px; border-radius: 12px; text-align: left; border-left: 5px solid var(--primary); margin-bottom: 20px; }
         .highlight { color: #ffd700; font-weight: bold; }
-        .choice-group { display: flex; gap: 15px; margin-top: 30px; display: none; }
-        .progress-indicator { background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 15px; color: #aaa; }
+        
+        /* 4段階ボタンのレイアウト */
+        .choice-group { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; display: none; }
+        .btn-sub-label { display: block; font-size: 0.65rem; font-weight: normal; opacity: 0.8; margin-top: 4px; }
+        
+        .progress-indicator { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; margin-bottom: 15px; color: #aaa; display: inline-block; }
         .add-card { background: #ffffff; border-radius: 15px; overflow: hidden; margin-bottom: 20px; border: 1px solid #e0e4e8; }
         .add-header { background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; color: #555; }
         .add-body { padding: 20px; display: none; border-top: 1px solid #eee; }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 5px; margin-left: 5px; }
-        input[type="text"], textarea { width: 100%; padding: 12px; border: 1px solid #dee2e6; border-radius: 10px; background: #fcfcfc; font-size: 16px; transition: 0.3s; }
+        input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1px solid #dee2e6; border-radius: 10px; background: #fcfcfc; font-size: 16px; transition: 0.3s; box-sizing: border-box; }
         input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(0,123,255,0.1); }
         input[type="file"] { display: none; }
         
-        /* 新規追加：同期モーダル用のスタイル */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; max-width: 450px; width: 90%; max-height: 80vh; overflow-y: auto; }
         .modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; color: #333; }
@@ -91,32 +99,17 @@
     <input type="file" id="importFile" accept=".json" onchange="importData(event)">
 </div>
 
-<!-- 同期モーダル -->
 <div id="sync-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">📥 単語の取り込み設定</div>
-        
         <div class="input-group">
             <label>合言葉</label>
             <input type="password" id="secret-key-input" placeholder="合言葉を入力">
         </div>
-
         <div style="margin: 20px 0;">
-            <label style="font-size: 0.9rem; font-weight: bold; color: #555; margin-bottom: 10px; display: block;">
-                取り込むカテゴリー・難易度を選択：
-            </label>
-            <div style="margin-bottom: 10px;">
-                <button class="btn" style="background: #e9ecef; color: #333; padding: 8px; font-size: 0.85rem;" onclick="toggleAllCategories(true)">すべて選択</button>
-                <button class="btn" style="background: #e9ecef; color: #333; padding: 8px; font-size: 0.85rem; margin-top: 5px;" onclick="toggleAllCategories(false)">選択解除</button>
-            </div>
-            <div id="category-checkboxes" class="checkbox-group">
-                <div class="checkbox-item">
-                    <input type="checkbox" id="cat-all" value="ALL" checked>
-                    <label for="cat-all" style="margin: 0; cursor: pointer;">すべてのカテゴリー</label>
-                </div>
-            </div>
+            <label style="font-size: 0.9rem; font-weight: bold; color: #555; margin-bottom: 10px; display: block;">取り込むカテゴリーを選択：</label>
+            <div id="category-checkboxes" class="checkbox-group"></div>
         </div>
-
         <div class="btn-group">
             <button class="btn" style="background: #6c757d; color: white; flex: 1;" onclick="closeSyncModal()">キャンセル</button>
             <button class="btn" style="background: var(--success); color: white; flex: 1;" onclick="syncFromSheet()">取り込む</button>
@@ -125,40 +118,52 @@
 </div>
 
 <div id="quiz-area">
+    <div id="progress-bar-container"><div id="progress-bar"></div></div>
     <div class="quiz-card">
         <div class="progress-indicator" id="progress-indicator">問題 1/10</div>
         <div id="q-type-label" style="font-size:0.9rem; color:var(--primary)"></div>
         <div id="q-word" class="q-word"></div>
         <div id="q-pron" style="color:#aaa; margin-bottom:20px;"></div>
+        
         <button id="show-ans-btn" class="btn btn-main" onclick="showAnswer()">答えを見る</button>
+        
         <div id="answer-box" class="answer-box">
             <p><strong>意味:</strong> <span id="q-meaning" style="font-size:1.2rem;"></span></p>
             <p><strong>例文:</strong> <br><span id="q-sentence" style="font-style:italic; color:#ddd;"></span></p>
             <p><strong>解説:</strong> <br><span id="q-advice" class="highlight"></span></p>
         </div>
+
         <div id="choice-group" class="choice-group">
-            <button class="btn" style="background:#dc3545; color:white; flex:1;" onclick="submitResult(false)">忘れた</button>
-            <button class="btn" style="background:#28a745; color:white; flex:1;" onclick="submitResult(true)">覚えた</button>
+            <button class="btn" style="background:#dc3545; color:white;" onclick="submitResult(1)">
+                忘れた<span class="btn-sub-label">今日もう一度</span>
+            </button>
+            <button class="btn" style="background:#ffc107; color:#333;" onclick="submitResult(2)">
+                不安<span class="btn-sub-label">明日復習</span>
+            </button>
+            <button class="btn" style="background:#28a745; color:white;" onclick="submitResult(3)">
+                わかった<span class="btn-sub-label">4日後</span>
+            </button>
+            <button class="btn" style="background:#007bff; color:white;" onclick="submitResult(4)">
+                完璧！<span class="btn-sub-label">7日後</span>
+            </button>
         </div>
         <button class="btn" style="background:transparent; color:#666; margin-top:20px;" onclick="closeQuiz()">中断</button>
     </div>
 </div>
 
 <script>
-    // セキュリティ対策：IDを分割して保持
     const _p1 = "18XxJwzl4sF3_";
     const _p2 = "kHJp8qk-QUUfvsqMM3AyJNKdWmyUFUE";
-    const SECRET_KEY = "19951228"; // ★ここにSNSで教える「合言葉」を設定してください
+    const SECRET_KEY = "19951228";
 
     let myVocab = JSON.parse(localStorage.getItem('my_vocab_data')) || [];
     let quizList = [];
     let currentIdx = 0;
-    let availableCategories = []; // Sheetsから取得可能なカテゴリー一覧
+    let availableCategories = [];
 
     function updateDisplay() {
         const today = new Date().toISOString().split('T')[0];
         const filter = document.getElementById('level-filter').value;
-
         const levels = [...new Set(myVocab.map(v => v.level))].filter(Boolean);
         const select = document.getElementById('level-filter');
         const currentSelection = select.value;
@@ -170,192 +175,103 @@
         });
         select.value = currentSelection;
 
-        const due = myVocab.filter(v => {
+        const dueCount = myVocab.filter(v => {
             const isDue = !v.nextReview || v.nextReview <= today;
             const isMatch = (filter === "ALL" || v.level === filter);
             return isDue && isMatch;
-        });
-        document.getElementById('review-count').innerText = `今日の復習: ${due.length} 語`;
+        }).length;
+        document.getElementById('review-count').innerText = `今日の復習: ${dueCount} 語`;
     }
 
-    // 同期モーダルを開く
     function openSyncModal() {
         document.getElementById('sync-modal').style.display = 'flex';
-        // まずカテゴリー一覧を取得
         fetchAvailableCategories();
     }
+    function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
 
-    // 同期モーダルを閉じる
-    function closeSyncModal() {
-        document.getElementById('sync-modal').style.display = 'none';
-    }
-
-    // 利用可能なカテゴリー一覧を取得
     async function fetchAvailableCategories() {
-        const sId = _p1 + _p2;
-        const url = `https://docs.google.com/spreadsheets/d/${sId}/gviz/tq?tqx=out:csv`;
-
+        const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
         try {
             const res = await fetch(url);
             const csv = await res.text();
             const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1);
             const categories = new Set();
-
             rows.forEach(line => {
-                if (!line.trim()) return;
                 const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                const clean = (s) => s ? s.replace(/^"|"$/g, '').trim() : "";
-                const level = clean(cols[0]);
-                if (level && !line.includes("MESSAGE:")) {
-                    categories.add(level);
-                }
+                const level = cols[0] ? cols[0].replace(/^"|"$/g, '').trim() : "";
+                if (level && !line.includes("MESSAGE:")) categories.add(level);
             });
-
             availableCategories = Array.from(categories).sort();
             renderCategoryCheckboxes();
-        } catch (e) {
-            console.error("カテゴリー取得エラー:", e);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    // カテゴリーチェックボックスを描画
     function renderCategoryCheckboxes() {
         const container = document.getElementById('category-checkboxes');
-        container.innerHTML = '<div class="checkbox-item"><input type="checkbox" id="cat-all" value="ALL" checked onclick="handleAllCheckbox()"><label for="cat-all" style="margin: 0; cursor: pointer;">すべてのカテゴリー</label></div>';
-
+        container.innerHTML = '<div class="checkbox-item"><input type="checkbox" id="cat-all" value="ALL" checked onclick="handleAllCheckbox()"><label for="cat-all">すべてのカテゴリー</label></div>';
         availableCategories.forEach((cat, idx) => {
-            const item = document.createElement('div');
-            item.className = 'checkbox-item';
-            item.innerHTML = `
-                <input type="checkbox" id="cat-${idx}" value="${cat}" checked onclick="handleCategoryCheckbox()">
-                <label for="cat-${idx}" style="margin: 0; cursor: pointer;">${cat}</label>
-            `;
-            container.appendChild(item);
+            container.innerHTML += `<div class="checkbox-item"><input type="checkbox" id="cat-${idx}" value="${cat}" checked onclick="handleCategoryCheckbox()"><label for="cat-${idx}">${cat}</label></div>`;
         });
     }
 
-    // 「すべて」チェックボックスの処理
     function handleAllCheckbox() {
-        const allChecked = document.getElementById('cat-all').checked;
-        const checkboxes = document.querySelectorAll('#category-checkboxes input[type="checkbox"]:not(#cat-all)');
-        checkboxes.forEach(cb => cb.checked = allChecked);
+        const checked = document.getElementById('cat-all').checked;
+        document.querySelectorAll('#category-checkboxes input').forEach(cb => cb.checked = checked);
     }
-
-    // 個別カテゴリーチェックボックスの処理
+    
     function handleCategoryCheckbox() {
-        const checkboxes = document.querySelectorAll('#category-checkboxes input[type="checkbox"]:not(#cat-all)');
+        const checkboxes = document.querySelectorAll('#category-checkboxes input:not(#cat-all)');
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         document.getElementById('cat-all').checked = allChecked;
     }
 
-    // すべて選択/解除
-    function toggleAllCategories(select) {
-        const checkboxes = document.querySelectorAll('#category-checkboxes input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = select);
-    }
-
-    // 選択されたカテゴリーを取得
-    function getSelectedCategories() {
-        const allCheckbox = document.getElementById('cat-all');
-        if (allCheckbox && allCheckbox.checked) {
-            return 'ALL';
-        }
-
-        const checkboxes = document.querySelectorAll('#category-checkboxes input[type="checkbox"]:not(#cat-all):checked');
-        return Array.from(checkboxes).map(cb => cb.value);
-    }
-
     async function syncFromSheet() {
-        const inputKey = document.getElementById('secret-key-input').value;
-        if (inputKey !== SECRET_KEY) {
-            alert("合言葉が正しくありません。");
-            return;
-        }
-
-        const selectedCategories = getSelectedCategories();
-        if (selectedCategories !== 'ALL' && selectedCategories.length === 0) {
-            alert("少なくとも1つのカテゴリーを選択してください。");
-            return;
-        }
-
-        const sId = _p1 + _p2;
-        const url = `https://docs.google.com/spreadsheets/d/${sId}/gviz/tq?tqx=out:csv`;
-
+        if (document.getElementById('secret-key-input').value !== SECRET_KEY) return alert("合言葉が正しくありません。");
+        const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
         try {
             const res = await fetch(url);
             const csv = await res.text();
             const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1);
             let count = 0;
-            
             rows.forEach(line => {
                 if (!line.trim()) return;
-                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                const clean = (s) => s ? s.replace(/^"|"$/g, '').trim() : "";
-                
-                // メッセージ処理
-                if(line.includes("MESSAGE:")) {
-                    const msg = line.match(/MESSAGE:([^,"]+)/);
-                    if(msg) document.getElementById('teacher-message').innerText = msg[1];
-                }
-
-                if (cols.length >= 3) {
-                    const level = clean(cols[0]);
-                    
-                    // カテゴリーフィルタリング
-                    if (selectedCategories !== 'ALL' && !selectedCategories.includes(level)) {
-                        return;
-                    }
-
-                    const rawWordData = clean(cols[2]);
-                    const wordParts = rawWordData.split(/\r?\n/);
-                    const word = wordParts[0].trim();
-                    const pron = wordParts.slice(1).join(' ').trim();
-                    
-                    if (word && !myVocab.some(v => v.word.toLowerCase() === word.toLowerCase())) {
+                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+                if(line.includes("MESSAGE:")) document.getElementById('teacher-message').innerText = line.match(/MESSAGE:([^,"]+)/)[1];
+                if (cols.length >= 4) {
+                    const wordData = cols[2].split(/\n/);
+                    if (!myVocab.some(v => v.word.toLowerCase() === wordData[0].trim().toLowerCase())) {
                         myVocab.push({
-                            level: level, 
-                            type: clean(cols[1]), 
-                            word: word,
-                            pronunciation: pron || undefined, 
-                            meaning: clean(cols[3]),
-                            sentence: clean(cols[4]), 
-                            advice: clean(cols[5]),
-                            nextReview: new Date().toISOString().split('T')[0], 
-                            interval: 0
+                            level: cols[0], type: cols[1], word: wordData[0].trim(),
+                            pronunciation: wordData[1] || "", meaning: cols[3],
+                            sentence: cols[4] || "", advice: cols[5] || "",
+                            nextReview: new Date().toISOString().split('T')[0], interval: 0
                         });
                         count++;
                     }
                 }
             });
-            
             localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
+            alert(`${count}語追加しました`);
             closeSyncModal();
-            
-            const categoryText = selectedCategories === 'ALL' ? 'すべてのカテゴリー' : selectedCategories.join(', ');
-            alert(`✅ 同期完了！\n取り込み対象: ${categoryText}\n追加された単語: ${count}件`);
             updateDisplay();
-        } catch (e) { 
-            alert("同期に失敗しました。公開設定を確認してください。"); 
-        }
+        } catch (e) { alert("同期エラーが発生しました。"); }
     }
 
-    // --- 以下、クイズ・基本ロジック ---
     function startReview() {
         const today = new Date().toISOString().split('T')[0];
         const filter = document.getElementById('level-filter').value;
-        quizList = myVocab.filter(v => {
-            const isDue = !v.nextReview || v.nextReview <= today;
-            const isMatch = (filter === "ALL" || v.level === filter);
-            return isDue && isMatch;
-        });
+        quizList = myVocab.filter(v => (!v.nextReview || v.nextReview <= today) && (filter === "ALL" || v.level === filter));
         if (quizList.length === 0) return alert("復習すべき単語はありません！");
-        quizList = quizList.sort(() => Math.random() - 0.5);
+        quizList.sort(() => Math.random() - 0.5);
         currentIdx = 0;
         document.getElementById('quiz-area').style.display = "block";
         showQuestion();
     }
+
     function showQuestion() {
         const q = quizList[currentIdx];
+        const progress = ((currentIdx + 1) / quizList.length) * 100;
+        document.getElementById('progress-bar').style.width = progress + "%";
         document.getElementById('progress-indicator').innerText = `問題 ${currentIdx + 1}/${quizList.length}`;
         document.getElementById('q-word').innerText = q.word;
         document.getElementById('q-type-label').innerText = `[${q.level}] ${q.type}`;
@@ -367,65 +283,73 @@
         document.getElementById('choice-group').style.display = "none";
         document.getElementById('show-ans-btn').style.display = "block";
     }
+
     function showAnswer() {
         document.getElementById('answer-box').style.display = "block";
-        document.getElementById('choice-group').style.display = "flex";
+        document.getElementById('choice-group').style.display = "grid";
         document.getElementById('show-ans-btn').style.display = "none";
     }
-    function submitResult(isCorrect) {
+
+    function submitResult(score) {
         const target = myVocab.find(v => v.word === quizList[currentIdx].word);
-        if(isCorrect) { target.interval = (target.interval === 0) ? 1 : target.interval * 2; }
-        else { target.interval = 0; }
+        if (!target.interval) target.interval = 0;
+
+        // 4段階忘却曲線ロジック
+        if (score === 1) target.interval = 0; // 忘れた
+        else if (score === 2) target.interval = (target.interval === 0) ? 1 : Math.max(1, Math.floor(target.interval * 1.2)); // 不安
+        else if (score === 3) target.interval = (target.interval === 0) ? 4 : Math.floor(target.interval * 2.0); // わかった
+        else if (score === 4) target.interval = (target.interval === 0) ? 7 : Math.floor(target.interval * 3.5); // 完璧
+
         let next = new Date();
-        next.setDate(next.getDate() + (isCorrect ? target.interval : 0));
+        next.setDate(next.getDate() + target.interval);
         target.nextReview = next.toISOString().split('T')[0];
+        
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         currentIdx++;
-        if(currentIdx < quizList.length) showQuestion();
+        if (currentIdx < quizList.length) showQuestion();
         else { alert("🎉 全問題を完了しました！"); closeQuiz(); }
     }
+
     function saveWord() {
-        const word = document.getElementById('word').value;
-        const meaning = document.getElementById('meaning').value;
-        if (!word || !meaning) return alert("必須項目を埋めてください");
+        const w = document.getElementById('word').value;
+        const m = document.getElementById('meaning').value;
+        if (!w || !m) return alert("英単語と意味は必須です。");
         myVocab.push({
-            level: "自習", type: document.getElementById('type').value, word: word.trim(),
-            pronunciation: document.getElementById('pronunciation').value, meaning: meaning,
+            level: "自習", type: document.getElementById('type').value, word: w.trim(),
+            pronunciation: document.getElementById('pronunciation').value, meaning: m,
             sentence: document.getElementById('sentence').value, advice: document.getElementById('advice').value,
             nextReview: new Date().toISOString().split('T')[0], interval: 0
         });
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         alert("保存しました！");
-        document.getElementById('word').value = '';
-        document.getElementById('meaning').value = '';
-        document.getElementById('type').value = '';
-        document.getElementById('pronunciation').value = '';
-        document.getElementById('sentence').value = '';
-        document.getElementById('advice').value = '';
         updateDisplay();
     }
+
     function exportData() {
         const blob = new Blob([JSON.stringify(myVocab, null, 2)], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `wordstock_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `wordstock_backup.json`;
         a.click();
     }
-    function importData(event) {
+
+    function importData(e) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-            myVocab = JSON.parse(e.target.result);
+        reader.onload = (event) => {
+            myVocab = JSON.parse(event.target.result);
             localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-            alert("復元完了");
+            alert("復元が完了しました。");
             updateDisplay();
         };
-        reader.readAsText(event.target.files[0]);
+        reader.readAsText(e.target.files[0]);
     }
+
     function closeQuiz() { document.getElementById('quiz-area').style.display = "none"; updateDisplay(); }
     function toggleAddForm() {
-        const body = document.getElementById('add-body');
-        body.style.display = (body.style.display === "block") ? "none" : "block";
-        document.getElementById('add-icon').innerText = (body.style.display === "block") ? "ー" : "＋";
+        const b = document.getElementById('add-body');
+        const isShow = b.style.display === "block";
+        b.style.display = isShow ? "none" : "block";
+        document.getElementById('add-icon').innerText = isShow ? "＋" : "ー";
     }
     updateDisplay();
 </script>
