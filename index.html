@@ -75,8 +75,8 @@
         <label style="font-size: 0.85rem; font-weight: bold; color: #555;">🔊 読み上げ設定</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
             <div class="input-group" style="margin-bottom: 0;">
-                <label>声の種類</label>
-                <select id="voice-select" style="font-size: 0.8rem;" onchange="saveVoiceSettings()"></select>
+                <label>声・地域 (US/UK等)</label>
+                <select id="voice-select" style="font-size: 0.75rem;" onchange="saveVoiceSettings()"></select>
             </div>
             <div class="input-group" style="margin-bottom: 0;">
                 <label>速度: <span id="rate-val">0.9</span></label>
@@ -140,10 +140,10 @@
         </div>
 
         <div id="choice-group" class="choice-group">
-            <button class="btn" style="background:#dc3545; color:white;" onclick="submitResult(1)">忘れた<span class="btn-sub-label">今日もう一度</span></button>
-            <button class="btn" style="background:#ffc107; color:#333;" onclick="submitResult(2)">不安<span class="btn-sub-label">明日復習</span></button>
-            <button class="btn" style="background:#28a745; color:white;" onclick="submitResult(3)">わかった<span class="btn-sub-label">4日後</span></button>
-            <button class="btn" style="background:#007bff; color:white;" onclick="submitResult(4)">完璧！<span class="btn-sub-label">7日後</span></button>
+            <button class="btn" style="background:#dc3545; color:white;" onclick="submitResult(1)">忘れた</button>
+            <button class="btn" style="background:#ffc107; color:#333;" onclick="submitResult(2)">不安</button>
+            <button class="btn" style="background:#28a745; color:white;" onclick="submitResult(3)">わかった</button>
+            <button class="btn" style="background:#007bff; color:white;" onclick="submitResult(4)">完璧！</button>
         </div>
         <button class="btn" style="background:transparent; color:#666; margin-top:20px;" onclick="closeQuiz()">中断</button>
     </div>
@@ -154,17 +154,29 @@
     const _p2 = "kHJp8qk-QUUfvsqMM3AyJNKdWmyUFUE";
     const SECRET_KEY = "19951228";
     let myVocab = JSON.parse(localStorage.getItem('my_vocab_data')) || [];
-    let quizList = [];
-    let currentIdx = 0;
     let voices = [];
 
+    // 🔊 全地域の英語（en-XX）をリストアップする
     function initVoices() {
-        voices = speechSynthesis.getVoices().filter(v => v.lang.includes('en'));
+        // すべての音声を一度取得
+        const allVoices = speechSynthesis.getVoices();
+        if (allVoices.length === 0) return; // まだロードされていなければ何もしない
+
+        // 「en」が含まれるすべての英語ボイスをフィルタリング
+        voices = allVoices.filter(v => v.lang.toLowerCase().includes('en'));
+        
         const select = document.getElementById('voice-select');
         const savedVoiceName = localStorage.getItem('voice_name');
-        select.innerHTML = voices.map(v => `<option value="${v.name}" ${v.name === savedVoiceName ? 'selected' : ''}>${v.name}</option>`).join('');
+        
+        // リストを生成 (US, GB, AUなどが入る)
+        select.innerHTML = voices.map(v => 
+            `<option value="${v.name}" ${v.name === savedVoiceName ? 'selected' : ''}>${v.name} (${v.lang})</option>`
+        ).join('');
     }
+
+    // 端末によってリスト取得タイミングが異なるため二重で監視
     window.speechSynthesis.onvoiceschanged = initVoices;
+    setTimeout(initVoices, 500); // 予備
 
     function saveVoiceSettings() {
         localStorage.setItem('voice_name', document.getElementById('voice-select').value);
@@ -176,11 +188,19 @@
         speechSynthesis.cancel();
         const wordOnly = text.split('\n')[0].replace(/[\[\/].*?[\]\/]/g, '').trim();
         const uttr = new SpeechSynthesisUtterance(wordOnly);
+        
         const selectedVoiceName = document.getElementById('voice-select').value;
-        uttr.voice = voices.find(v => v.name === selectedVoiceName);
+        const selectedVoice = voices.find(v => v.name === selectedVoiceName);
+        if (selectedVoice) {
+            uttr.voice = selectedVoice;
+            uttr.lang = selectedVoice.lang; // 明示的に言語を設定
+        }
+        
         uttr.rate = parseFloat(document.getElementById('voice-rate').value) || 0.9;
         speechSynthesis.speak(uttr);
     }
+
+    // --- 以下、既存の全機能を維持 ---
 
     function updateDisplay() {
         const today = new Date().toISOString().split('T')[0];
