@@ -49,6 +49,10 @@
         .checkbox-item:hover { background: #e9ecef; }
         .checkbox-item input[type="checkbox"] { margin-right: 10px; width: 18px; height: 18px; cursor: pointer; }
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        
+        /* 追加したスタイル：削除ボタン用 */
+        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 10px; padding: 0 15px; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
+        .btn-delete:active { transform: scale(0.95); opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -64,9 +68,12 @@
     <div class="card" style="text-align:center;">
         <div style="margin-bottom: 15px; text-align: left;">
             <label style="font-size: 0.8rem; color: #888; font-weight: bold;">コース・難易度を選択：</label>
-            <select id="level-filter" onchange="updateDisplay()" style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--primary); font-size: 1rem; background: white;">
-                <option value="ALL">すべての単語</option>
-            </select>
+            <div style="display: flex; gap: 8px; margin-top: 5px;">
+                <select id="level-filter" onchange="updateDisplay()" style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid var(--primary); font-size: 1rem; background: white;">
+                    <option value="ALL">すべての単語</option>
+                </select>
+                <button class="btn-delete" onclick="deleteSelectedCategory()" title="選択中のカテゴリを削除">🗑️</button>
+            </div>
         </div>
         <h2 id="review-count">今日の復習: 0 語</h2>
         <button class="btn btn-main" onclick="startReview()">復習開始</button>
@@ -163,9 +170,10 @@
 
     function updateDisplay() {
         const today = new Date().toISOString().split('T')[0];
-        const filter = document.getElementById('level-filter').value;
-        const levels = [...new Set(myVocab.map(v => v.level))].filter(Boolean);
         const select = document.getElementById('level-filter');
+        const filter = select.value;
+        const levels = [...new Set(myVocab.map(v => v.level))].filter(Boolean);
+        
         const currentSelection = select.value;
         select.innerHTML = '<option value="ALL">すべての単語</option>';
         levels.forEach(lvl => {
@@ -173,14 +181,48 @@
             opt.value = lvl; opt.innerText = lvl;
             select.appendChild(opt);
         });
-        select.value = currentSelection;
+        
+        // 既存の選択肢があれば維持、なければALL
+        if([...select.options].some(o => o.value === currentSelection)) {
+            select.value = currentSelection;
+        } else {
+            select.value = "ALL";
+        }
 
+        const activeFilter = select.value;
         const dueCount = myVocab.filter(v => {
             const isDue = !v.nextReview || v.nextReview <= today;
-            const isMatch = (filter === "ALL" || v.level === filter);
+            const isMatch = (activeFilter === "ALL" || v.level === activeFilter);
             return isDue && isMatch;
         }).length;
         document.getElementById('review-count').innerText = `今日の復習: ${dueCount} 語`;
+    }
+
+    // カテゴリ削除機能
+    function deleteSelectedCategory() {
+        const filter = document.getElementById('level-filter').value;
+        let message = "";
+        
+        if (myVocab.length === 0) return alert("削除するデータがありません。");
+
+        if (filter === "ALL") {
+            message = "【警告】すべての単語データを削除しますか？\nこの操作は取り消せません。";
+        } else {
+            const count = myVocab.filter(v => v.level === filter).length;
+            message = `カテゴリ「${filter}」の単語（${count}語）を削除しますか？`;
+        }
+
+        if (!confirm(message)) return;
+
+        if (filter === "ALL") {
+            myVocab = [];
+        } else {
+            myVocab = myVocab.filter(v => v.level !== filter);
+        }
+
+        localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
+        alert("削除が完了しました。");
+        updateDisplay();
     }
 
     function openSyncModal() {
@@ -228,6 +270,12 @@
     async function syncFromSheet() {
         if (document.getElementById('secret-key-input').value !== SECRET_KEY) return alert("合言葉が正しくありません。");
         const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
+        
+        // 選択されたカテゴリを取得
+        const selectedCats = Array.from(document.querySelectorAll('#category-checkboxes input:not(#cat-all)'))
+                                  .filter(cb => cb.checked)
+                                  .map(cb => cb.value);
+
         try {
             const res = await fetch(url);
             const csv = await res.text();
@@ -236,17 +284,25 @@
             rows.forEach(line => {
                 if (!line.trim()) return;
                 const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
-                if(line.includes("MESSAGE:")) document.getElementById('teacher-message').innerText = line.match(/MESSAGE:([^,"]+)/)[1];
+                
+                if(line.includes("MESSAGE:")) {
+                    document.getElementById('teacher-message').innerText = line.match(/MESSAGE:([^,"]+)/)[1];
+                }
+
                 if (cols.length >= 4) {
-                    const wordData = cols[2].split(/\n/);
-                    if (!myVocab.some(v => v.word.toLowerCase() === wordData[0].trim().toLowerCase())) {
-                        myVocab.push({
-                            level: cols[0], type: cols[1], word: wordData[0].trim(),
-                            pronunciation: wordData[1] || "", meaning: cols[3],
-                            sentence: cols[4] || "", advice: cols[5] || "",
-                            nextReview: new Date().toISOString().split('T')[0], interval: 0
-                        });
-                        count++;
+                    const level = cols[0];
+                    // 選択したカテゴリに含まれる場合のみ追加
+                    if (selectedCats.includes(level)) {
+                        const wordData = cols[2].split(/\n/);
+                        if (!myVocab.some(v => v.word.toLowerCase() === wordData[0].trim().toLowerCase())) {
+                            myVocab.push({
+                                level: level, type: cols[1], word: wordData[0].trim(),
+                                pronunciation: wordData[1] || "", meaning: cols[3],
+                                sentence: cols[4] || "", advice: cols[5] || "",
+                                nextReview: new Date().toISOString().split('T')[0], interval: 0
+                            });
+                            count++;
+                        }
                     }
                 }
             });
@@ -294,11 +350,10 @@
         const target = myVocab.find(v => v.word === quizList[currentIdx].word);
         if (!target.interval) target.interval = 0;
 
-        // 4段階忘却曲線ロジック
-        if (score === 1) target.interval = 0; // 忘れた
-        else if (score === 2) target.interval = (target.interval === 0) ? 1 : Math.max(1, Math.floor(target.interval * 1.2)); // 不安
-        else if (score === 3) target.interval = (target.interval === 0) ? 4 : Math.floor(target.interval * 2.0); // わかった
-        else if (score === 4) target.interval = (target.interval === 0) ? 7 : Math.floor(target.interval * 3.5); // 完璧
+        if (score === 1) target.interval = 0;
+        else if (score === 2) target.interval = (target.interval === 0) ? 1 : Math.max(1, Math.floor(target.interval * 1.2));
+        else if (score === 3) target.interval = (target.interval === 0) ? 4 : Math.floor(target.interval * 2.0);
+        else if (score === 4) target.interval = (target.interval === 0) ? 7 : Math.floor(target.interval * 3.5);
 
         let next = new Date();
         next.setDate(next.getDate() + target.interval);
