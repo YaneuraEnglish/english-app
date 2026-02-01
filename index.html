@@ -26,7 +26,6 @@
         
         .quiz-card { text-align: center; margin-top: 30px; }
         .q-word { font-size: 2.8rem; font-weight: bold; margin: 10px 0; color: #fff; cursor: pointer; }
-        .q-word:active { opacity: 0.7; }
         .answer-box { display: none; background: #2d2d2d; padding: 20px; border-radius: 12px; text-align: left; border-left: 5px solid var(--primary); margin-bottom: 20px; }
         .highlight { color: #ffd700; font-weight: bold; }
         
@@ -39,21 +38,12 @@
         .add-body { padding: 20px; display: none; border-top: 1px solid #eee; }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 5px; margin-left: 5px; }
-        input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1px solid #dee2e6; border-radius: 10px; background: #fcfcfc; font-size: 16px; transition: 0.3s; box-sizing: border-box; }
-        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(0,123,255,0.1); }
-        input[type="file"] { display: none; }
+        input[type="text"], input[type="password"], textarea, select { width: 100%; padding: 12px; border: 1px solid #dee2e6; border-radius: 10px; background: #fcfcfc; font-size: 16px; transition: 0.3s; box-sizing: border-box; }
         
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; max-width: 450px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        .modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; color: #333; }
-        .checkbox-group { margin: 15px 0; }
-        .checkbox-item { display: flex; align-items: center; padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-        .checkbox-item:hover { background: #e9ecef; }
-        .checkbox-item input[type="checkbox"] { margin-right: 10px; width: 18px; height: 18px; cursor: pointer; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         
-        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 10px; padding: 0 15px; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
-        .btn-delete:active { transform: scale(0.95); opacity: 0.8; }
+        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 10px; padding: 0 15px; cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -61,19 +51,14 @@
 <div class="container">
     <h1>📚 WordStock <small style="font-size:0.6rem; color:#999;">by yaneuraenglish</small></h1>
 
-    <div id="teacher-msg-card" class="card" style="font-size: 0.85rem; background: #fff3cd; border: none; padding: 10px 15px; border-radius: 10px; display: block;">
-        <strong>開発者からのメッセージ:</strong><br>
-        <span id="teacher-message">「取り込む」ボタンで最新の単語を同期してください。</span>
-    </div>
-
     <div class="card" style="text-align:center;">
         <div style="margin-bottom: 15px; text-align: left;">
             <label style="font-size: 0.8rem; color: #888; font-weight: bold;">コース・難易度を選択：</label>
             <div style="display: flex; gap: 8px; margin-top: 5px;">
-                <select id="level-filter" onchange="updateDisplay()" style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid var(--primary); font-size: 1rem; background: white;">
+                <select id="level-filter" onchange="updateDisplay()">
                     <option value="ALL">すべての単語</option>
                 </select>
-                <button class="btn-delete" onclick="deleteSelectedCategory()" title="選択中のカテゴリを削除">🗑️</button>
+                <button class="btn-delete" onclick="deleteSelectedCategory()">🗑️</button>
             </div>
         </div>
         <h2 id="review-count">今日の復習: 0 語</h2>
@@ -82,27 +67,35 @@
 
     <button class="btn btn-sync" onclick="openSyncModal()">🔄 最新の単語を取り込む</button>
 
+    <div class="card" style="padding: 15px;">
+        <label style="font-size: 0.85rem; font-weight: bold; color: #555;">🔊 読み上げ設定</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div class="input-group" style="margin-bottom: 0;">
+                <label>声の種類</label>
+                <select id="voice-select" style="font-size: 0.8rem;" onchange="saveVoiceSettings()"></select>
+            </div>
+            <div class="input-group" style="margin-bottom: 0;">
+                <label>速度: <span id="rate-val">0.9</span></label>
+                <input type="range" id="voice-rate" min="0.5" max="1.5" step="0.1" value="0.9" oninput="document.getElementById('rate-val').innerText=this.value; saveVoiceSettings();" style="width: 100%;">
+            </div>
+        </div>
+    </div>
+
     <div class="add-card">
         <div class="add-header" onclick="toggleAddForm()">
-            <span>自分で単語を追加（自習用）</span>
+            <span>自分で単語を追加</span>
             <span id="add-icon">＋</span>
         </div>
         <div id="add-body" class="add-body">
-            <div class="input-group"><label>英単語</label><input type="text" id="word" placeholder="例: apple"></div>
-            <div class="input-group"><label>意味</label><input type="text" id="meaning" placeholder="例: りんご"></div>
-            <div style="display: flex; gap: 10px;">
-                <div class="input-group" style="flex: 1;"><label>品詞</label><input type="text" id="type" placeholder="名詞"></div>
-                <div class="input-group" style="flex: 1;"><label>発音</label><input type="text" id="pronunciation" placeholder="æpl"></div>
-            </div>
-            <div class="input-group"><label>例文</label><textarea id="sentence" rows="2" placeholder="I like apples."></textarea></div>
-            <div class="input-group"><label>メモ・解説</label><textarea id="advice" rows="2" placeholder="語源や覚え方のコツ"></textarea></div>
-            <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">スマホに保存する</button>
+            <div class="input-group"><label>英単語</label><input type="text" id="word" placeholder="apple"></div>
+            <div class="input-group"><label>意味</label><input type="text" id="meaning" placeholder="りんご"></div>
+            <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">保存する</button>
         </div>
     </div>
 
     <div style="display: flex; gap: 10px;">
-        <button class="btn btn-backup" onclick="exportData()" style="flex:1; font-size: 0.8rem;">📥 データを保存</button>
-        <button class="btn btn-backup" onclick="document.getElementById('importFile').click()" style="flex:1; font-size: 0.8rem;">📤 データを復元</button>
+        <button class="btn btn-backup" onclick="exportData()" style="flex:1; font-size: 0.8rem;">📥 保存</button>
+        <button class="btn btn-backup" onclick="document.getElementById('importFile').click()" style="flex:1; font-size: 0.8rem;">📤 復元</button>
     </div>
     <input type="file" id="importFile" accept=".json" onchange="importData(event)">
 </div>
@@ -110,17 +103,11 @@
 <div id="sync-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">📥 単語の取り込み設定</div>
-        <div class="input-group">
-            <label>合言葉</label>
-            <input type="password" id="secret-key-input" placeholder="合言葉を入力">
-        </div>
-        <div style="margin: 20px 0;">
-            <label style="font-size: 0.9rem; font-weight: bold; color: #555; margin-bottom: 10px; display: block;">取り込むカテゴリーを選択：</label>
-            <div id="category-checkboxes" class="checkbox-group"></div>
-        </div>
-        <div class="btn-group">
-            <button class="btn" style="background: #6c757d; color: white; flex: 1;" onclick="closeSyncModal()">キャンセル</button>
-            <button class="btn" style="background: var(--success); color: white; flex: 1;" onclick="syncFromSheet()">取り込む</button>
+        <input type="password" id="secret-key-input" placeholder="合言葉">
+        <div id="category-checkboxes" class="checkbox-group" style="margin-top:15px;"></div>
+        <div class="btn-group" style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn" style="background:#6c757d; color:white;" onclick="closeSyncModal()">閉じる</button>
+            <button class="btn" style="background:var(--success); color:white;" onclick="syncFromSheet()">取り込む</button>
         </div>
     </div>
 </div>
@@ -129,32 +116,17 @@
     <div id="progress-bar-container"><div id="progress-bar"></div></div>
     <div class="quiz-card">
         <div class="progress-indicator" id="progress-indicator">問題 1/10</div>
-        <div id="q-type-label" style="font-size:0.9rem; color:var(--primary)"></div>
         <div id="q-word" class="q-word" onclick="speak(this.innerText)"></div>
-        <div style="color: #aaa; font-size: 0.8rem; margin-top: -10px; margin-bottom: 10px;">(タップで再生 🔊)</div>
-        <div id="q-pron" style="color:#aaa; margin-bottom:20px;"></div>
-        
-        <button id="show-ans-btn" class="btn btn-main" onclick="showAnswer()">答えを見る</button>
-        
+        <div style="color: #aaa; font-size: 0.8rem; margin-bottom: 20px;">(タップで再生 🔊)</div>
         <div id="answer-box" class="answer-box">
-            <p><strong>意味:</strong> <span id="q-meaning" style="font-size:1.2rem;"></span></p>
-            <p><strong>例文:</strong> <br><span id="q-sentence" style="font-style:italic; color:#ddd;"></span></p>
-            <p><strong>解説:</strong> <br><span id="q-advice" class="highlight"></span></p>
+            <p><strong>意味:</strong> <span id="q-meaning"></span></p>
         </div>
-
+        <button id="show-ans-btn" class="btn btn-main" onclick="showAnswer()">答えを見る</button>
         <div id="choice-group" class="choice-group">
-            <button class="btn" style="background:#dc3545; color:white;" onclick="submitResult(1)">
-                忘れた<span class="btn-sub-label">今日もう一度</span>
-            </button>
-            <button class="btn" style="background:#ffc107; color:#333;" onclick="submitResult(2)">
-                不安<span class="btn-sub-label">明日復習</span>
-            </button>
-            <button class="btn" style="background:#28a745; color:white;" onclick="submitResult(3)">
-                わかった<span class="btn-sub-label">4日後</span>
-            </button>
-            <button class="btn" style="background:#007bff; color:white;" onclick="submitResult(4)">
-                完璧！<span class="btn-sub-label">7日後</span>
-            </button>
+            <button class="btn" style="background:#dc3545; color:white;" onclick="submitResult(1)">忘れた</button>
+            <button class="btn" style="background:#ffc107; color:#333;" onclick="submitResult(2)">不安</button>
+            <button class="btn" style="background:#28a745; color:white;" onclick="submitResult(3)">わかった</button>
+            <button class="btn" style="background:#007bff; color:white;" onclick="submitResult(4)">完璧！</button>
         </div>
         <button class="btn" style="background:transparent; color:#666; margin-top:20px;" onclick="closeQuiz()">中断</button>
     </div>
@@ -164,19 +136,33 @@
     const _p1 = "18XxJwzl4sF3_";
     const _p2 = "kHJp8qk-QUUfvsqMM3AyJNKdWmyUFUE";
     const SECRET_KEY = "19951228";
-
     let myVocab = JSON.parse(localStorage.getItem('my_vocab_data')) || [];
-    let quizList = [];
-    let currentIdx = 0;
-    let availableCategories = [];
+    let voices = [];
 
-    // 音声読み上げ関数
+    // 音声初期化と設定保存
+    function initVoices() {
+        voices = speechSynthesis.getVoices().filter(v => v.lang.includes('en'));
+        const select = document.getElementById('voice-select');
+        const savedVoiceName = localStorage.getItem('voice_name');
+        
+        select.innerHTML = voices.map(v => `<option value="${v.name}" ${v.name === savedVoiceName ? 'selected' : ''}>${v.name}</option>`).join('');
+    }
+    window.speechSynthesis.onvoiceschanged = initVoices;
+
+    function saveVoiceSettings() {
+        localStorage.setItem('voice_name', document.getElementById('voice-select').value);
+        localStorage.setItem('voice_rate', document.getElementById('voice-rate').value);
+    }
+
     function speak(text) {
         if (!text) return;
         speechSynthesis.cancel();
-        const uttr = new SpeechSynthesisUtterance(text);
-        uttr.lang = 'en-US';
-        uttr.rate = 0.9;
+        const wordOnly = text.split('\n')[0].replace(/[\[\/].*?[\]\/]/g, '').trim();
+        const uttr = new SpeechSynthesisUtterance(wordOnly);
+        
+        const selectedVoiceName = document.getElementById('voice-select').value;
+        uttr.voice = voices.find(v => v.name === selectedVoiceName);
+        uttr.rate = parseFloat(document.getElementById('voice-rate').value) || 0.9;
         speechSynthesis.speak(uttr);
     }
 
@@ -185,113 +171,11 @@
         const select = document.getElementById('level-filter');
         const currentSelection = select.value;
         const levels = [...new Set(myVocab.map(v => v.level))].filter(Boolean);
+        select.innerHTML = '<option value="ALL">すべての単語</option>' + levels.map(l => `<option value="${l}" ${l===currentSelection?'selected':''}>${l}</option>`).join('');
         
-        select.innerHTML = '<option value="ALL">すべての単語</option>';
-        levels.forEach(lvl => {
-            const opt = document.createElement('option');
-            opt.value = lvl; opt.innerText = lvl;
-            select.appendChild(opt);
-        });
-        
-        if([...select.options].some(o => o.value === currentSelection)) {
-            select.value = currentSelection;
-        } else {
-            select.value = "ALL";
-        }
-
         const activeFilter = select.value;
-        const dueCount = myVocab.filter(v => {
-            const isDue = !v.nextReview || v.nextReview <= today;
-            const isMatch = (activeFilter === "ALL" || v.level === activeFilter);
-            return isDue && isMatch;
-        }).length;
+        const dueCount = myVocab.filter(v => (!v.nextReview || v.nextReview <= today) && (activeFilter === "ALL" || v.level === activeFilter)).length;
         document.getElementById('review-count').innerText = `今日の復習: ${dueCount} 語`;
-    }
-
-    function deleteSelectedCategory() {
-        const filter = document.getElementById('level-filter').value;
-        if (myVocab.length === 0) return alert("削除するデータがありません。");
-        const message = filter === "ALL" ? "全データを削除しますか？" : `カテゴリ「${filter}」を削除しますか？`;
-        if (!confirm(message)) return;
-        myVocab = filter === "ALL" ? [] : myVocab.filter(v => v.level !== filter);
-        localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-        updateDisplay();
-    }
-
-    function openSyncModal() {
-        document.getElementById('sync-modal').style.display = 'flex';
-        fetchAvailableCategories();
-    }
-    function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
-
-    async function fetchAvailableCategories() {
-        const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
-        try {
-            const res = await fetch(url);
-            const csv = await res.text();
-            const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1);
-            const categories = new Set();
-            rows.forEach(line => {
-                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                const level = cols[0] ? cols[0].replace(/^"|"$/g, '').trim() : "";
-                if (level && !line.includes("MESSAGE:")) categories.add(level);
-            });
-            availableCategories = Array.from(categories).sort();
-            renderCategoryCheckboxes();
-        } catch (e) { console.error(e); }
-    }
-
-    function renderCategoryCheckboxes() {
-        const container = document.getElementById('category-checkboxes');
-        container.innerHTML = '<div class="checkbox-item"><input type="checkbox" id="cat-all" value="ALL" checked onclick="handleAllCheckbox()"><label for="cat-all">すべてのカテゴリー</label></div>';
-        availableCategories.forEach((cat, idx) => {
-            container.innerHTML += `<div class="checkbox-item"><input type="checkbox" id="cat-${idx}" value="${cat}" checked onclick="handleCategoryCheckbox()"><label for="cat-${idx}">${cat}</label></div>`;
-        });
-    }
-
-    function handleAllCheckbox() {
-        const checked = document.getElementById('cat-all').checked;
-        document.querySelectorAll('#category-checkboxes input').forEach(cb => cb.checked = checked);
-    }
-    
-    function handleCategoryCheckbox() {
-        const checkboxes = document.querySelectorAll('#category-checkboxes input:not(#cat-all)');
-        document.getElementById('cat-all').checked = Array.from(checkboxes).every(cb => cb.checked);
-    }
-
-    async function syncFromSheet() {
-        if (document.getElementById('secret-key-input').value !== SECRET_KEY) return alert("合言葉が正しくありません。");
-        const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
-        const selectedCats = Array.from(document.querySelectorAll('#category-checkboxes input:not(#cat-all)'))
-                                  .filter(cb => cb.checked).map(cb => cb.value);
-
-        try {
-            const res = await fetch(url);
-            const csv = await res.text();
-            const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1);
-            let count = 0;
-            rows.forEach(line => {
-                if (!line.trim()) return;
-                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
-                if(line.includes("MESSAGE:")) document.getElementById('teacher-message').innerText = line.match(/MESSAGE:([^,"]+)/)[1];
-                if (cols.length >= 4 && selectedCats.includes(cols[0])) {
-                    const wordData = cols[2].split(/\n/);
-                    if (!myVocab.some(v => v.word.toLowerCase() === wordData[0].trim().toLowerCase())) {
-                        myVocab.push({
-                            level: cols[0], type: cols[1], word: wordData[0].trim(),
-                            pronunciation: wordData[1] || "", meaning: cols[3],
-                            sentence: cols[4] || "", advice: cols[5] || "",
-                            nextReview: new Date().toISOString().split('T')[0], interval: 0
-                        });
-                        count++;
-                    }
-                }
-            });
-            localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-            alert(`${count}語追加しました`);
-            closeSyncModal();
-            updateDisplay();
-        } catch (e) { alert("同期エラーが発生しました。"); }
     }
 
     function startReview() {
@@ -308,18 +192,11 @@
     function showQuestion() {
         const q = quizList[currentIdx];
         document.getElementById('progress-bar').style.width = ((currentIdx + 1) / quizList.length * 100) + "%";
-        document.getElementById('progress-indicator').innerText = `問題 ${currentIdx + 1}/${quizList.length}`;
         document.getElementById('q-word').innerText = q.word;
-        document.getElementById('q-type-label').innerText = `[${q.level}] ${q.type}`;
-        document.getElementById('q-pron').innerText = q.pronunciation ? `[ ${q.pronunciation} ]` : "";
         document.getElementById('q-meaning').innerText = q.meaning;
-        document.getElementById('q-sentence').innerText = q.sentence;
-        document.getElementById('q-advice').innerText = q.advice;
         document.getElementById('answer-box').style.display = "none";
         document.getElementById('choice-group').style.display = "none";
         document.getElementById('show-ans-btn').style.display = "block";
-        
-        // 自動読み上げ実行
         speak(q.word);
     }
 
@@ -331,63 +208,86 @@
 
     function submitResult(score) {
         const target = myVocab.find(v => v.word === quizList[currentIdx].word);
-        if (!target.interval) target.interval = 0;
-        if (score === 1) target.interval = 0;
-        else if (score === 2) target.interval = (target.interval === 0) ? 1 : Math.max(1, Math.floor(target.interval * 1.2));
-        else if (score === 3) target.interval = (target.interval === 0) ? 4 : Math.floor(target.interval * 2.0);
-        else if (score === 4) target.interval = (target.interval === 0) ? 7 : Math.floor(target.interval * 3.5);
-
+        let interval = target.interval || 0;
+        if (score === 1) interval = 0;
+        else if (score === 2) interval = (interval === 0) ? 1 : Math.floor(interval * 1.2);
+        else if (score === 3) interval = (interval === 0) ? 4 : Math.floor(interval * 2.0);
+        else if (score === 4) interval = (interval === 0) ? 7 : Math.floor(interval * 3.5);
+        
+        target.interval = interval;
         let next = new Date();
-        next.setDate(next.getDate() + target.interval);
+        next.setDate(next.getDate() + interval);
         target.nextReview = next.toISOString().split('T')[0];
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         currentIdx++;
-        if (currentIdx < quizList.length) showQuestion();
-        else { alert("🎉 全問題を完了しました！"); closeQuiz(); }
+        if (currentIdx < quizList.length) showQuestion(); else { alert("完了！"); closeQuiz(); }
     }
 
+    // --- その他基本機能 ---
+    function deleteSelectedCategory() {
+        const filter = document.getElementById('level-filter').value;
+        if (!confirm("削除しますか？")) return;
+        myVocab = filter === "ALL" ? [] : myVocab.filter(v => v.level !== filter);
+        localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
+        updateDisplay();
+    }
     function saveWord() {
         const w = document.getElementById('word').value;
         const m = document.getElementById('meaning').value;
-        if (!w || !m) return alert("英単語と意味は必須です。");
-        myVocab.push({
-            level: "自習", type: document.getElementById('type').value, word: w.trim(),
-            pronunciation: document.getElementById('pronunciation').value, meaning: m,
-            sentence: document.getElementById('sentence').value, advice: document.getElementById('advice').value,
-            nextReview: new Date().toISOString().split('T')[0], interval: 0
+        if(!w || !m) return alert("必須入力です");
+        myVocab.push({ level: "自習", word: w, meaning: m, nextReview: new Date().toISOString().split('T')[0], interval: 0 });
+        localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
+        updateDisplay(); alert("保存しました");
+    }
+    function openSyncModal() { document.getElementById('sync-modal').style.display = 'flex'; fetchAvailableCategories(); }
+    function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
+    async function fetchAvailableCategories() {
+        const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
+        const res = await fetch(url); const csv = await res.text();
+        const rows = csv.split(/\r?\n/).slice(1);
+        const cats = [...new Set(rows.map(r => r.split(',')[0].replace(/"/g,'')))].filter(c => c && !c.includes("MESSAGE"));
+        document.getElementById('category-checkboxes').innerHTML = cats.map(c => `<div class="checkbox-item"><input type="checkbox" value="${c}" checked> ${c}</div>`).join('');
+    }
+    async function syncFromSheet() {
+        if (document.getElementById('secret-key-input').value !== SECRET_KEY) return alert("合言葉が違います");
+        const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
+        const res = await fetch(url); const csv = await res.text();
+        const rows = csv.split(/\r?\n/).slice(1);
+        const selectedCats = Array.from(document.querySelectorAll('#category-checkboxes input:checked')).map(cb => cb.value);
+        rows.forEach(r => {
+            const cols = r.split(',').map(c => c.replace(/"/g,'').trim());
+            if (selectedCats.includes(cols[0]) && !myVocab.some(v => v.word === cols[2])) {
+                myVocab.push({ level: cols[0], type: cols[1], word: cols[2], meaning: cols[3], nextReview: new Date().toISOString().split('T')[0], interval: 0 });
+            }
         });
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-        alert("保存しました！");
-        updateDisplay();
+        updateDisplay(); closeSyncModal(); alert("同期完了");
     }
-
     function exportData() {
-        const blob = new Blob([JSON.stringify(myVocab, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `wordstock_backup.json`;
-        a.click();
+        const blob = new Blob([JSON.stringify(myVocab)], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wordstock.json'; a.click();
     }
-
     function importData(e) {
         const reader = new FileReader();
-        reader.onload = (event) => {
-            myVocab = JSON.parse(event.target.result);
-            localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-            alert("復元完了");
-            updateDisplay();
-        };
+        reader.onload = (ev) => { myVocab = JSON.parse(ev.target.result); localStorage.setItem('my_vocab_data', JSON.stringify(myVocab)); updateDisplay(); };
         reader.readAsText(e.target.files[0]);
     }
-
     function closeQuiz() { document.getElementById('quiz-area').style.display = "none"; updateDisplay(); }
     function toggleAddForm() {
         const b = document.getElementById('add-body');
-        const isShow = b.style.display === "block";
-        b.style.display = isShow ? "none" : "block";
-        document.getElementById('add-icon').innerText = isShow ? "＋" : "ー";
+        b.style.display = b.style.display === "block" ? "none" : "block";
     }
-    updateDisplay();
+
+    // 初回読み込み時の設定反映
+    window.onload = () => {
+        const savedRate = localStorage.getItem('voice_rate');
+        if(savedRate) {
+            document.getElementById('voice-rate').value = savedRate;
+            document.getElementById('rate-val').innerText = savedRate;
+        }
+        updateDisplay();
+        initVoices();
+    };
 </script>
 </body>
 </html>
