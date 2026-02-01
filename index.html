@@ -42,7 +42,6 @@
         
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; max-width: 450px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        
         .btn-delete { background: #dc3545; color: white; border: none; border-radius: 10px; padding: 0 15px; cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
@@ -50,6 +49,11 @@
 
 <div class="container">
     <h1>📚 WordStock <small style="font-size:0.6rem; color:#999;">by yaneuraenglish</small></h1>
+
+    <div id="teacher-msg-card" class="card" style="font-size: 0.85rem; background: #fff3cd; border: none; padding: 10px 15px; border-radius: 10px;">
+        <strong>開発者からのメッセージ:</strong><br>
+        <span id="teacher-message">「取り込む」ボタンで最新の単語を同期してください。</span>
+    </div>
 
     <div class="card" style="text-align:center;">
         <div style="margin-bottom: 15px; text-align: left;">
@@ -76,20 +80,26 @@
             </div>
             <div class="input-group" style="margin-bottom: 0;">
                 <label>速度: <span id="rate-val">0.9</span></label>
-                <input type="range" id="voice-rate" min="0.5" max="1.5" step="0.1" value="0.9" oninput="document.getElementById('rate-val').innerText=this.value; saveVoiceSettings();" style="width: 100%;">
+                <input type="range" id="voice-rate" min="0.5" max="1.5" step="0.1" value="0.9" oninput="document.getElementById('rate-val').innerText=this.value; saveVoiceSettings();">
             </div>
         </div>
     </div>
 
     <div class="add-card">
         <div class="add-header" onclick="toggleAddForm()">
-            <span>自分で単語を追加</span>
+            <span>自分で単語を追加（自習用）</span>
             <span id="add-icon">＋</span>
         </div>
         <div id="add-body" class="add-body">
             <div class="input-group"><label>英単語</label><input type="text" id="word" placeholder="apple"></div>
             <div class="input-group"><label>意味</label><input type="text" id="meaning" placeholder="りんご"></div>
-            <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">保存する</button>
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;"><label>品詞</label><input type="text" id="type" placeholder="名詞"></div>
+                <div class="input-group" style="flex: 1;"><label>発音</label><input type="text" id="pronunciation" placeholder="æpl"></div>
+            </div>
+            <div class="input-group"><label>例文</label><textarea id="sentence" rows="2" placeholder="I like apples."></textarea></div>
+            <div class="input-group"><label>メモ・解説</label><textarea id="advice" rows="2" placeholder="語源など"></textarea></div>
+            <button class="btn" style="background: var(--success); color: white;" onclick="saveWord()">スマホに保存する</button>
         </div>
     </div>
 
@@ -106,8 +116,8 @@
         <input type="password" id="secret-key-input" placeholder="合言葉">
         <div id="category-checkboxes" class="checkbox-group" style="margin-top:15px;"></div>
         <div class="btn-group" style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn" style="background:#6c757d; color:white;" onclick="closeSyncModal()">閉じる</button>
-            <button class="btn" style="background:var(--success); color:white;" onclick="syncFromSheet()">取り込む</button>
+            <button class="btn" style="background:#6c757d; color:white; flex:1;" onclick="closeSyncModal()">キャンセル</button>
+            <button class="btn" style="background:var(--success); color:white; flex:1;" onclick="syncFromSheet()">取り込む</button>
         </div>
     </div>
 </div>
@@ -116,17 +126,24 @@
     <div id="progress-bar-container"><div id="progress-bar"></div></div>
     <div class="quiz-card">
         <div class="progress-indicator" id="progress-indicator">問題 1/10</div>
+        <div id="q-type-label" style="font-size:0.9rem; color:var(--primary)"></div>
         <div id="q-word" class="q-word" onclick="speak(this.innerText)"></div>
-        <div style="color: #aaa; font-size: 0.8rem; margin-bottom: 20px;">(タップで再生 🔊)</div>
-        <div id="answer-box" class="answer-box">
-            <p><strong>意味:</strong> <span id="q-meaning"></span></p>
-        </div>
+        <div style="color: #aaa; font-size: 0.8rem; margin-top: -10px; margin-bottom: 10px;">(タップで再生 🔊)</div>
+        <div id="q-pron" style="color:#aaa; margin-bottom:20px;"></div>
+        
         <button id="show-ans-btn" class="btn btn-main" onclick="showAnswer()">答えを見る</button>
+        
+        <div id="answer-box" class="answer-box">
+            <p><strong>意味:</strong> <span id="q-meaning" style="font-size:1.2rem;"></span></p>
+            <p><strong>例文:</strong> <br><span id="q-sentence" style="font-style:italic; color:#ddd;"></span></p>
+            <p><strong>解説:</strong> <br><span id="q-advice" class="highlight"></span></p>
+        </div>
+
         <div id="choice-group" class="choice-group">
-            <button class="btn" style="background:#dc3545; color:white;" onclick="submitResult(1)">忘れた</button>
-            <button class="btn" style="background:#ffc107; color:#333;" onclick="submitResult(2)">不安</button>
-            <button class="btn" style="background:#28a745; color:white;" onclick="submitResult(3)">わかった</button>
-            <button class="btn" style="background:#007bff; color:white;" onclick="submitResult(4)">完璧！</button>
+            <button class="btn" style="background:#dc3545; color:white;" onclick="submitResult(1)">忘れた<span class="btn-sub-label">今日もう一度</span></button>
+            <button class="btn" style="background:#ffc107; color:#333;" onclick="submitResult(2)">不安<span class="btn-sub-label">明日復習</span></button>
+            <button class="btn" style="background:#28a745; color:white;" onclick="submitResult(3)">わかった<span class="btn-sub-label">4日後</span></button>
+            <button class="btn" style="background:#007bff; color:white;" onclick="submitResult(4)">完璧！<span class="btn-sub-label">7日後</span></button>
         </div>
         <button class="btn" style="background:transparent; color:#666; margin-top:20px;" onclick="closeQuiz()">中断</button>
     </div>
@@ -137,14 +154,14 @@
     const _p2 = "kHJp8qk-QUUfvsqMM3AyJNKdWmyUFUE";
     const SECRET_KEY = "19951228";
     let myVocab = JSON.parse(localStorage.getItem('my_vocab_data')) || [];
+    let quizList = [];
+    let currentIdx = 0;
     let voices = [];
 
-    // 音声初期化と設定保存
     function initVoices() {
         voices = speechSynthesis.getVoices().filter(v => v.lang.includes('en'));
         const select = document.getElementById('voice-select');
         const savedVoiceName = localStorage.getItem('voice_name');
-        
         select.innerHTML = voices.map(v => `<option value="${v.name}" ${v.name === savedVoiceName ? 'selected' : ''}>${v.name}</option>`).join('');
     }
     window.speechSynthesis.onvoiceschanged = initVoices;
@@ -159,7 +176,6 @@
         speechSynthesis.cancel();
         const wordOnly = text.split('\n')[0].replace(/[\[\/].*?[\]\/]/g, '').trim();
         const uttr = new SpeechSynthesisUtterance(wordOnly);
-        
         const selectedVoiceName = document.getElementById('voice-select').value;
         uttr.voice = voices.find(v => v.name === selectedVoiceName);
         uttr.rate = parseFloat(document.getElementById('voice-rate').value) || 0.9;
@@ -172,7 +188,6 @@
         const currentSelection = select.value;
         const levels = [...new Set(myVocab.map(v => v.level))].filter(Boolean);
         select.innerHTML = '<option value="ALL">すべての単語</option>' + levels.map(l => `<option value="${l}" ${l===currentSelection?'selected':''}>${l}</option>`).join('');
-        
         const activeFilter = select.value;
         const dueCount = myVocab.filter(v => (!v.nextReview || v.nextReview <= today) && (activeFilter === "ALL" || v.level === activeFilter)).length;
         document.getElementById('review-count').innerText = `今日の復習: ${dueCount} 語`;
@@ -192,8 +207,13 @@
     function showQuestion() {
         const q = quizList[currentIdx];
         document.getElementById('progress-bar').style.width = ((currentIdx + 1) / quizList.length * 100) + "%";
+        document.getElementById('progress-indicator').innerText = `問題 ${currentIdx + 1}/${quizList.length}`;
         document.getElementById('q-word').innerText = q.word;
+        document.getElementById('q-type-label').innerText = `[${q.level || ''}] ${q.type || ''}`;
+        document.getElementById('q-pron').innerText = q.pronunciation ? `[ ${q.pronunciation} ]` : "";
         document.getElementById('q-meaning').innerText = q.meaning;
+        document.getElementById('q-sentence').innerText = q.sentence || "";
+        document.getElementById('q-advice').innerText = q.advice || "";
         document.getElementById('answer-box').style.display = "none";
         document.getElementById('choice-group').style.display = "none";
         document.getElementById('show-ans-btn').style.display = "block";
@@ -210,83 +230,92 @@
         const target = myVocab.find(v => v.word === quizList[currentIdx].word);
         let interval = target.interval || 0;
         if (score === 1) interval = 0;
-        else if (score === 2) interval = (interval === 0) ? 1 : Math.floor(interval * 1.2);
+        else if (score === 2) interval = (interval === 0) ? 1 : Math.max(1, Math.floor(interval * 1.2));
         else if (score === 3) interval = (interval === 0) ? 4 : Math.floor(interval * 2.0);
         else if (score === 4) interval = (interval === 0) ? 7 : Math.floor(interval * 3.5);
-        
         target.interval = interval;
         let next = new Date();
         next.setDate(next.getDate() + interval);
         target.nextReview = next.toISOString().split('T')[0];
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         currentIdx++;
-        if (currentIdx < quizList.length) showQuestion(); else { alert("完了！"); closeQuiz(); }
+        if (currentIdx < quizList.length) showQuestion(); else { alert("全問題を完了しました！"); closeQuiz(); }
     }
 
-    // --- その他基本機能 ---
     function deleteSelectedCategory() {
         const filter = document.getElementById('level-filter').value;
-        if (!confirm("削除しますか？")) return;
+        if (!confirm(filter === "ALL" ? "全データを削除しますか？" : `カテゴリ「${filter}」を削除しますか？`)) return;
         myVocab = filter === "ALL" ? [] : myVocab.filter(v => v.level !== filter);
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         updateDisplay();
     }
+
     function saveWord() {
         const w = document.getElementById('word').value;
         const m = document.getElementById('meaning').value;
         if(!w || !m) return alert("必須入力です");
-        myVocab.push({ level: "自習", word: w, meaning: m, nextReview: new Date().toISOString().split('T')[0], interval: 0 });
+        myVocab.push({
+            level: "自習", type: document.getElementById('type').value, word: w,
+            pronunciation: document.getElementById('pronunciation').value, meaning: m,
+            sentence: document.getElementById('sentence').value, advice: document.getElementById('advice').value,
+            nextReview: new Date().toISOString().split('T')[0], interval: 0
+        });
         localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
         updateDisplay(); alert("保存しました");
     }
+
     function openSyncModal() { document.getElementById('sync-modal').style.display = 'flex'; fetchAvailableCategories(); }
     function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
+    
     async function fetchAvailableCategories() {
         const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
-        const res = await fetch(url); const csv = await res.text();
-        const rows = csv.split(/\r?\n/).slice(1);
-        const cats = [...new Set(rows.map(r => r.split(',')[0].replace(/"/g,'')))].filter(c => c && !c.includes("MESSAGE"));
-        document.getElementById('category-checkboxes').innerHTML = cats.map(c => `<div class="checkbox-item"><input type="checkbox" value="${c}" checked> ${c}</div>`).join('');
+        try {
+            const res = await fetch(url); const csv = await res.text();
+            const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1);
+            const cats = [...new Set(rows.map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)[0].replace(/"/g,'').trim()))].filter(c => c && !c.includes("MESSAGE"));
+            document.getElementById('category-checkboxes').innerHTML = cats.map(c => `<div class="checkbox-item"><input type="checkbox" value="${c}" checked> ${c}</div>`).join('');
+        } catch(e) { alert("カテゴリ取得失敗"); }
     }
+
     async function syncFromSheet() {
         if (document.getElementById('secret-key-input').value !== SECRET_KEY) return alert("合言葉が違います");
         const url = `https://docs.google.com/spreadsheets/d/${_p1+_p2}/gviz/tq?tqx=out:csv`;
-        const res = await fetch(url); const csv = await res.text();
-        const rows = csv.split(/\r?\n/).slice(1);
-        const selectedCats = Array.from(document.querySelectorAll('#category-checkboxes input:checked')).map(cb => cb.value);
-        rows.forEach(r => {
-            const cols = r.split(',').map(c => c.replace(/"/g,'').trim());
-            if (selectedCats.includes(cols[0]) && !myVocab.some(v => v.word === cols[2])) {
-                myVocab.push({ level: cols[0], type: cols[1], word: cols[2], meaning: cols[3], nextReview: new Date().toISOString().split('T')[0], interval: 0 });
-            }
-        });
-        localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
-        updateDisplay(); closeSyncModal(); alert("同期完了");
+        try {
+            const res = await fetch(url); const csv = await res.text();
+            const rows = csv.split(/\r?\n(?=(?:(?:[^"]*"){2})*[^"]*$)/).slice(1);
+            const selectedCats = Array.from(document.querySelectorAll('#category-checkboxes input:checked')).map(cb => cb.value);
+            rows.forEach(r => {
+                const cols = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g,'').trim());
+                if(r.includes("MESSAGE:")) document.getElementById('teacher-message').innerText = r.match(/MESSAGE:([^,"]+)/)[1];
+                if (selectedCats.includes(cols[0]) && !myVocab.some(v => v.word === cols[2])) {
+                    myVocab.push({ level: cols[0], type: cols[1], word: cols[2], pronunciation: cols[2].split('\n')[1]||"", meaning: cols[3], sentence: cols[4]||"", advice: cols[5]||"", nextReview: new Date().toISOString().split('T')[0], interval: 0 });
+                }
+            });
+            localStorage.setItem('my_vocab_data', JSON.stringify(myVocab));
+            updateDisplay(); closeSyncModal(); alert("同期完了");
+        } catch(e) { alert("同期失敗"); }
     }
+
     function exportData() {
-        const blob = new Blob([JSON.stringify(myVocab)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wordstock.json'; a.click();
+        const blob = new Blob([JSON.stringify(myVocab, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wordstock_backup.json'; a.click();
     }
     function importData(e) {
         const reader = new FileReader();
-        reader.onload = (ev) => { myVocab = JSON.parse(ev.target.result); localStorage.setItem('my_vocab_data', JSON.stringify(myVocab)); updateDisplay(); };
+        reader.onload = (ev) => { myVocab = JSON.parse(ev.target.result); localStorage.setItem('my_vocab_data', JSON.stringify(myVocab)); updateDisplay(); alert("復元完了"); };
         reader.readAsText(e.target.files[0]);
     }
     function closeQuiz() { document.getElementById('quiz-area').style.display = "none"; updateDisplay(); }
     function toggleAddForm() {
         const b = document.getElementById('add-body');
         b.style.display = b.style.display === "block" ? "none" : "block";
+        document.getElementById('add-icon').innerText = b.style.display === "block" ? "ー" : "＋";
     }
 
-    // 初回読み込み時の設定反映
     window.onload = () => {
         const savedRate = localStorage.getItem('voice_rate');
-        if(savedRate) {
-            document.getElementById('voice-rate').value = savedRate;
-            document.getElementById('rate-val').innerText = savedRate;
-        }
-        updateDisplay();
-        initVoices();
+        if(savedRate) { document.getElementById('voice-rate').value = savedRate; document.getElementById('rate-val').innerText = savedRate; }
+        updateDisplay(); initVoices();
     };
 </script>
 </body>
